@@ -1,0 +1,92 @@
+# Build outputs
+/build/
+/dist/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# IDE files - NetBeans
+/nbproject/private/
+
+# IDE files - IntelliJ IDEA
+/.idea/
+*.iml
+*.iws
+*.ipr
+/out/
+
+# IDE files - Eclipse
+/.settings/
+.classpath
+.project
+/.metadata/
+
+# IDE files - VS Code
+/.vscode/
+
+# Claude Code
+/.claude/
+
+# Logs
+/logs/
+*.log
+*.log.*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Credentials and sensitive files
+*.lic
+credentials.properties
+secrets.properties
+application-local.properties
+
+# Compiled class files
+*.class
+
+# Package files (keep lib/ directory JARs)
+*.war
+*.ear
+*.nar
+
+# Java
+hs_err_pid*
+replay_pid*
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+*.orig
+
+# Test outputs
+/test-output/
+/target/
+
+# Maven (if migrated to Maven later)
+/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (if migrated to Gradle later)
+.gradle
+**/build/
+!src/**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache

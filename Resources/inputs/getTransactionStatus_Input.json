@@ -1,0 +1,13 @@
+{
+	"transactionID": "48dc5c48dbf24730ad753fca272f2137",
+	"licenceFilePath": "D:\\env\\eSign\\ABC123.lic",
+	"pfxPath": "D:\\env\\eSign\\Test-Class3DocumentSigner2014.pfx",
+	"pfxPassword": "emudhra",
+	"pfxAlias": "1",
+	"proxyReq": false,
+	"proxyIp": "proxyIp",
+	"proxyPort": 0,
+	"sessionTimeout": 0,
+	"proxyUserID": "proxyUserID",
+	"proxyUserPassword": "proxyUserPassword"
+}
