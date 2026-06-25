@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-06-26
 
 ### Changed
 - Migrated to the open-source eSign library (`eSignASPLibrary5_5.jar`). **No licence file is required** — the library is now configured with `aspId`, `eSignURL` (V3) and `eSignURLV2` (V2) in the input JSON instead of a `licenceFilePath`.
 - Bundled all compile/runtime dependencies into `lib/` and switched `nbproject/project.properties` to relative classpath entries (removed the original author's hard-coded absolute paths).
 - `performBankKYC` input now requires a `bankKYCURL` field (new library signature).
 - Sample input JSONs in `Resources/inputs/` updated to the licence-free configuration.
+
+### Added
+- GitHub Actions workflow that builds the project and publishes the JAR and its dependencies to GitHub Releases (with release notes and the latest changelog section) on every push to `main`.
+- `NOTICE` file and an "Important Notice" disclaimer in the README: the CLI and any published JAR are provided "AS IS"; eMudhra's responsibility is limited to the eSign API and gateway services.
 
 ---
 

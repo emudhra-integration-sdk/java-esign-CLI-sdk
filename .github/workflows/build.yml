@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release tag to publish (e.g. v1.0.0). Creates the tag if it does not exist.'
-        required: true
+        description: 'Release tag to publish (e.g. v1.0.0). Defaults to v<version.txt> if blank.'
+        required: false
 
 jobs:
   build:
@@ -63,33 +63,49 @@ jobs:
             dist/lib/
           retention-days: 90
 
-      # ---- Release: only on a version tag push or a manual dispatch ----
+      # ---- Release: on every push to main, on version tags, and on manual dispatch ----
+      # (Pull requests build + upload artifacts only; they do not publish a release.)
 
       - name: Determine release version
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.version }}" ]; then
             VERSION="${{ inputs.version }}"
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="v$(tr -d '[:space:]' < version.txt)"
           fi
           echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION"
+
+      - name: Build release notes (latest CHANGELOG section)
+        if: github.event_name != 'pull_request'
+        run: |
+          # Print the first '## [...]' section of the changelog (up to the next one).
+          awk '/^## \[/{c++} c==1{print} c==2{exit}' CHANGELOG.md > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "---" >> RELEASE_NOTES.md
+          echo "_Built from \`${GITHUB_SHA::7}\`. The CLI and bundled dependencies are provided \"AS IS\" — see [NOTICE](NOTICE) and the README's Important Notice._" >> RELEASE_NOTES.md
+          echo "----- release notes -----" && cat RELEASE_NOTES.md
 
       - name: Package CLI + dependencies bundle
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         run: |
           VERSION="${{ steps.version.outputs.value }}"
           (cd dist && zip -r "../eSignASPLibraryCLI-${VERSION}.zip" eSignASPLibraryCLI.jar lib)
           ls -la "eSignASPLibraryCLI-${VERSION}.zip"
 
       - name: Publish to GitHub Releases
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.value }}
           name: eSign CLI Kit ${{ steps.version.outputs.value }}
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
+          make_latest: true
           fail_on_unmatched_files: true
           files: |
             dist/eSignASPLibraryCLI.jar
