@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,7 +85,7 @@ public class ESignASPLibraryCLI {
             String outputJsonPath = cliArgs.switchValue("-output").trim();
             processRequest(method, inputJsonPath, outputJsonPath);
 
-        } catch (IOException | IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException | NoSuchAlgorithmException e) {
             e.printStackTrace(System.out);
             System.out.println("Failure");
             return;
@@ -92,7 +93,7 @@ public class ESignASPLibraryCLI {
         System.out.println("Successful");
     }
 
-    public static void processRequest(String method, String inputJsonFilePath, String outputJsonFilePath) throws IllegalArgumentException, IOException {
+    public static void processRequest(String method, String inputJsonFilePath, String outputJsonFilePath) throws IllegalArgumentException, IOException, NoSuchAlgorithmException {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         File inputJsonPath = new File(inputJsonFilePath);
         File outputJsonPath = new File(outputJsonFilePath);
@@ -107,7 +108,7 @@ public class ESignASPLibraryCLI {
                     
                     for (SignInput si : req.getInputs()) {
                         if (si.isIsHash()) {
-                            eSignInput input = new eSignInput(si.getBase64doc(), si.getDocInfo(), si.getDocURL());
+                            eSignInput input = new eSignInput(si.getDocInfo(), si.getBase64doc(), si.getDocURL());
                             inputs.add(input);
                         } else {
                             
@@ -158,7 +159,7 @@ public class ESignASPLibraryCLI {
                     UserInfo ui = req.getUserInfo();
                     com.emudhra.esign.UserInfo info = new com.emudhra.esign.UserInfo(ui.getName(), ui.getMobile(), ui.getEmail(), ui.getAddress(), ui.getStateProvince(), ui.getCountry(),
                             ui.getPostalCode(),ui.getDateOfBirth(), ui.getGender(), ui.getPan(), ui.getAadhaar(), ui.getPhotoFormat(), ui.getPhotoBase64());
-                    eSignServiceReturn serviceReturn = eSignObj.performBankKYC(req.getTransactionID(), req.getIFSCCode(), req.getBankName(), req.getAccountNumber(), info);
+                    eSignServiceReturn serviceReturn = eSignObj.performBankKYC(req.getTransactionID(), req.getIFSCCode(), req.getBankName(), req.getAccountNumber(), info, req.getBankKYCURL());
                     CLIOutput out = new CLIOutput(serviceReturn, "PERFORMBANKKYC");
                     gson.toJson(out, writer);
                 }
@@ -170,9 +171,11 @@ public class ESignASPLibraryCLI {
         }
     }
 
-    private static eSign initLibrary(BaseInput req) {
+    private static eSign initLibrary(BaseInput req) throws NoSuchAlgorithmException {
         return new eSign(
-                req.getLicenceFilePath(),
+                req.getAspId(),
+                req.geteSignURL(),
+                req.geteSignURLV2(),
                 req.getPfxPath(),
                 req.getPfxPassword(),
                 req.getPfxAlias(),
@@ -182,7 +185,7 @@ public class ESignASPLibraryCLI {
                 req.getSessionTimeout(),
                 eSignSettings.LogType.AllLog,
                 req.getProxyUserID(),
-                req.getProxyUserPassword(), null,0);
+                req.getProxyUserPassword(), null, 0);
     }
     
     private static Map<String, String> getRequestParametersMap(Map<String, String[]> map) {

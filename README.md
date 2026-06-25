@@ -1,503 +1,176 @@
 # eSign Library CLI Kit (Java)
 
-A command-line interface (CLI) tool for the eSign Library, providing easy-to-use commands for PDF digital signature operations from the terminal.
+A command-line interface for eMudhra's open-source [eSign Library](https://github.com/emudhra-integration-sdk/java-esign-sdk). It wraps the library's signing API so you can drive PDF eSign workflows from the terminal, scripts, and CI/CD pipelines using simple JSON files for input and output.
 
 ## Table of Contents
 - [Overview](#overview)
-- [Features](#features)
 - [Requirements](#requirements)
-- [Installation](#installation)
 - [Building from Source](#building-from-source)
-- [Quick Start](#quick-start)
-- [CLI Commands](#cli-commands)
-- [Configuration](#configuration)
-- [Examples](#examples)
+- [How It Works](#how-it-works)
+- [CLI Usage](#cli-usage)
+- [Methods and Input JSON](#methods-and-input-json)
+- [Output JSON](#output-json)
 - [License](#license)
-- [Contributing](#contributing)
 
 ---
 
 ## Overview
 
-The eSign Library CLI Kit is a command-line wrapper around the [eSign Library](https://github.com/YOUR_USERNAME/Java_eSignLibKit), enabling developers and system administrators to integrate PDF digital signing capabilities into scripts, automation workflows, and CI/CD pipelines.
+The CLI is a thin wrapper: for every run it reads one JSON request file, calls a single eSign library method, and writes the library's response to one JSON output file. All cryptographic and gateway logic lives in the bundled `eSignASPLibrary5_5.jar`.
 
-### What Can You Do?
+eMudhra's eSign service uses a **two-phase remote signing** model:
 
-- ✅ Sign PDF documents from the command line
-- ✅ Generate gateway parameters for eSign workflows
-- ✅ Check transaction status
-- ✅ Retrieve signed documents
-- ✅ Integrate with shell scripts and automation tools
-- ✅ Batch process multiple documents
+1. **Pre-sign** (`getGatewayParam`) — the SDK hashes the PDF locally, builds a signed request with your ASP PFX certificate, and returns a `gatewayParameter` you POST to the eSign gateway to redirect the signer for authentication (OTP / Fingerprint / IRIS / Face).
+2. **Post-sign** (`getSignedPdf`) — after the signer authenticates, the gateway returns a response; the SDK injects the signature back into the PDF.
 
----
-
-## Features
-
-### Core Capabilities
-- **Command-Line PDF Signing**: Sign PDFs directly from terminal
-- **Multi-factor Authentication Support**:
-  - OTP (One-Time Password)
-  - Fingerprint
-  - IRIS recognition
-  - Face recognition
-- **Flexible Signature Options**:
-  - Standard signatures
-  - Image-based signatures
-  - Custom positioning (9-point grid)
-  - Page-level control (All, Even, Odd, First, Last, specific pages)
-- **Transaction Management**:
-  - Generate gateway parameters
-  - Check signing status
-  - Retrieve signed documents
-- **Scriptable & Automatable**:
-  - JSON-based input/output
-  - Exit codes for script integration
-  - Batch processing support
+> **No licence file required.** This kit targets the open-source library, which is configured with your `aspId` and the eSign gateway URLs directly in the input JSON — there is no `.lic` file.
 
 ---
 
 ## Requirements
 
-### Runtime Requirements
-- **Java**: JDK/JRE 1.8 or higher
-- **Operating System**: Windows, Linux, macOS
-- **eSign Library**: Uses eSignASPLibrary JAR internally
+- **Java**: JDK/JRE **1.8** (the project targets `source/target 1.8`)
+- **Apache Ant**: to build from source (optional — see the `javac` fallback below)
+- A valid eMudhra **ASP ID** and **ASP PFX certificate** (path/password/alias) to run real signing requests
 
-### Build Requirements
-- **JDK**: 1.8 or higher
-- **Apache Ant**: 1.9+ (for building from source)
-- **NetBeans**: 8.0+ (optional, for IDE integration)
-
----
-
-## Installation
-
-### Option 1: Use Pre-built JAR
-
-1. Download the latest `eSignASPLibraryCLI.jar` from the releases page
-2. Place it in your desired location
-3. Run the JAR:
-   ```bash
-   java -jar eSignASPLibraryCLI.jar --help
-   ```
-
-### Option 2: Build from Source
-
-See [Building from Source](#building-from-source) below.
+All Java dependencies are checked into `lib/` — no external download or absolute-path configuration is needed.
 
 ---
 
 ## Building from Source
 
-### Using Apache Ant (Recommended)
+### Using Apache Ant
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd Java_eSignLibCLIKit
-   ```
+```bash
+ant clean
+ant jar
+```
 
-2. **Build the project**:
-   ```bash
-   ant clean
-   ant jar
-   ```
+The output is `dist/eSignASPLibraryCLI.jar` with its dependencies copied to `dist/lib/`. The jar's manifest sets a `Class-Path` pointing at `lib/`, so keep that folder beside the jar when running.
 
-3. **Locate the JAR**:
-   The compiled JAR will be in `/dist/eSignASPLibraryCLI.jar`
+### Without Ant (direct javac)
 
-### Using NetBeans IDE
+```bash
+# Windows uses ';' as the classpath separator
+javac -encoding UTF-8 -cp "$(printf '%s;' lib/*.jar)" -d build/classes $(find src -name '*.java')
+```
 
-1. Open NetBeans
-2. File → Open Project
-3. Select the `Java_eSignLibCLIKit` folder
-4. Right-click → Clean and Build
-5. JAR will be in `/dist` folder
+The classpath references all JARs in `lib/`, including the core `eSignASPLibrary5_5.jar`. To upgrade the library, rebuild it from the `java-esign-sdk` repo and replace `lib/eSignASPLibrary5_5.jar` (update the filename in `nbproject/project.properties` if the version changes).
 
 ---
 
-## Quick Start
+## How It Works
 
-### Basic Command Structure
-
-```bash
-java -jar eSignASPLibraryCLI.jar <command> <options>
+```
+input.json ──▶ ESignASPLibraryCLI ──▶ eSignASPLibrary (com.emudhra.esign) ──▶ output.json
+                 │
+                 ├─ deserialize input JSON (Gson) into a request DTO
+                 ├─ initLibrary(): build eSign object from aspId + URLs + PFX + proxy
+                 ├─ call the one library method for the chosen -method
+                 └─ wrap the result in CLIOutput and serialize to output JSON
 ```
 
-### Simple Signing Example
-
-1. **Create a configuration JSON file** (`config.json`):
-   ```json
-   {
-     "aspId": "YOUR_ASP_ID",
-     "gatewayUrl": "https://gateway.example.com",
-     "responseUrl": "https://yourapp.com/callback",
-     "userEmail": "user@example.com",
-     "userName": "John Doe",
-     "userPhone": "9876543210",
-     "pdfPath": "/path/to/document.pdf",
-     "authMode": "OTP",
-     "coordinates": "BOTTOMRIGHT"
-   }
-   ```
-
-2. **Run the signing command**:
-   ```bash
-   java -jar eSignASPLibraryCLI.jar sign --config config.json
-   ```
-
-3. **Check the output**:
-   The CLI will output JSON with gateway URL and transaction details.
+On success the program prints `Successful`; on a handled error it prints the stack trace followed by `Failure`. The detailed error always lands in the output JSON's `errorCode` / `errorMessage` fields.
 
 ---
 
-## CLI Commands
-
-### 1. Generate Gateway Parameters
-
-Generate parameters to redirect user to eSign gateway:
+## CLI Usage
 
 ```bash
-java -jar eSignASPLibraryCLI.jar gateway \
-  --aspid YOUR_ASP_ID \
-  --gateway-url https://gateway.example.com \
-  --response-url https://yourapp.com/callback \
-  --email user@example.com \
-  --name "John Doe" \
-  --phone 9876543210 \
-  --pdf document.pdf \
-  --auth-mode OTP \
-  --position BOTTOMRIGHT
+java -jar eSignASPLibraryCLI.jar -method <METHOD> -input <input.json> -output <output.json>
 ```
 
-**Output**:
-```json
-{
-  "returnCode": "1",
-  "gatewayURL": "https://gateway.example.com/sign?token=...",
-  "responseURL": "https://yourapp.com/callback",
-  "transactionId": "TXN123456",
-  "message": "Success"
-}
-```
+All three switches are mandatory. `-method` is matched case-insensitively.
 
-### 2. Check Transaction Status
+| `-method`             | Purpose |
+|-----------------------|---------|
+| `getGatewayParam`     | Phase 1 — build the gateway redirect parameter for one or more PDFs |
+| `getSignedPdf`        | Phase 2 — produce the signed PDF from the gateway response |
+| `getTransactionStatus`| Poll the status of a transaction |
+| `performBankKYC`      | Perform bank-account KYC for a transaction |
 
-Check the status of a signing transaction:
+Example:
 
 ```bash
-java -jar eSignASPLibraryCLI.jar status \
-  --aspid YOUR_ASP_ID \
-  --txn-id TXN123456 \
-  --gateway-url https://gateway.example.com
+java -jar eSignASPLibraryCLI.jar \
+  -method getGatewayParam \
+  -input  Resources/inputs/getGatewayParam_Input.json \
+  -output gatewayParam_out.json
 ```
 
-**Output**:
-```json
-{
-  "returnCode": "1",
-  "status": "COMPLETED",
-  "transactionId": "TXN123456",
-  "message": "Document signed successfully"
-}
-```
-
-### 3. Retrieve Signed Document
-
-Get the signed PDF document:
-
-```bash
-java -jar eSignASPLibraryCLI.jar getsigned \
-  --aspid YOUR_ASP_ID \
-  --txn-id TXN123456 \
-  --gateway-url https://gateway.example.com \
-  --output signed_document.pdf
-```
-
-### 4. Direct Signing (Local Certificate)
-
-Sign a document using a local PKCS12 certificate:
-
-```bash
-java -jar eSignASPLibraryCLI.jar localsign \
-  --pdf document.pdf \
-  --cert certificate.p12 \
-  --password YOUR_CERT_PASSWORD \
-  --output signed_document.pdf \
-  --position BOTTOMRIGHT
-```
-
-### 5. Batch Processing
-
-Process multiple documents from a batch file:
-
-```bash
-java -jar eSignASPLibraryCLI.jar batch --file documents.txt
-```
-
-**documents.txt format**:
-```
-/path/to/doc1.pdf,TXN001,user1@example.com
-/path/to/doc2.pdf,TXN002,user2@example.com
-/path/to/doc3.pdf,TXN003,user3@example.com
-```
+Ready-to-edit sample input/output files for every method are in `Resources/inputs/` and `Resources/outputs/`.
 
 ---
 
-## Configuration
+## Methods and Input JSON
 
-### Configuration File Format
+### Common fields (all methods)
 
-Create a JSON configuration file for easier command execution:
+Every input shares these connection/credential fields:
 
-```json
-{
-  "aspId": "YOUR_ASP_ID",
-  "gatewayUrl": "https://gateway.example.com",
-  "responseUrl": "https://yourapp.com/callback",
-  "timeout": 30000,
-  "proxy": {
-    "host": "proxy.company.com",
-    "port": 8080,
-    "username": "proxyuser",
-    "password": "proxypass"
-  },
-  "signing": {
-    "authMode": "OTP",
-    "appearanceType": "STANDARD",
-    "coordinates": "BOTTOMRIGHT",
-    "pageNo": "ALL"
-  }
-}
-```
+| Field | Description |
+|-------|-------------|
+| `aspId` | Your eMudhra ASP ID |
+| `eSignURL` | V3 (PAN) eSign gateway URL |
+| `eSignURLV2` | V2 (Aadhaar) eSign gateway URL |
+| `pfxPath` | Path to the ASP PKCS#12 (`.pfx`) certificate |
+| `pfxPassword` | PFX password |
+| `pfxAlias` | Key alias inside the PFX |
+| `proxyReq`, `proxyIp`, `proxyPort`, `proxyUserID`, `proxyUserPassword` | Optional HTTP proxy settings |
+| `sessionTimeout` | Connection timeout in ms (`0` = library default) |
 
-**Usage**:
-```bash
-java -jar eSignASPLibraryCLI.jar gateway --config config.json --pdf document.pdf
-```
+### `getGatewayParam`
 
-### Environment Variables
+Adds: `inputs` (array — one entry per document), `signerID`, `transactionID`, `responseURL`, `redirectURL`, `tempFolderPath`, `eSignType` (`"V2"` or `"V3"`), `authMode` (`"OTP"`, `"FingerPrint"`, `"IRIS"`, `"FaceRecognition"`).
 
-Set common values using environment variables:
+Each entry in `inputs` is a document spec:
 
-```bash
-export ESIGN_ASP_ID="YOUR_ASP_ID"
-export ESIGN_GATEWAY_URL="https://gateway.example.com"
-export ESIGN_RESPONSE_URL="https://yourapp.com/callback"
+| Field | Notes |
+|-------|-------|
+| `appearanceType` | `StandardSignature`, `SignatureImage`, `advanceSignature`, `OneLiner`, `ColoredGraphic`, `BackgroundImage` |
+| `base64doc` | Base64 of the PDF — or the precomputed hash when `isHash` is `true` |
+| `isHash` | `true` to sign a hash instead of a full PDF |
+| `docInfo`, `docURL` | Document metadata shown on the gateway |
+| `signerName`, `reason`, `location` | Appearance text |
+| `pageCoordinates` | Page-level placement, e.g. `"1-100,100,50,200;2-..."` |
+| `coSign`, `rightOrigin` | Co-sign / coordinate-origin flags |
+| `imageSignBase64` | Base64 image for image/background/advance appearances |
+| `featureValueLeft`, `featureValueRight`, `oneLinerText` | Text for advance/one-liner appearances |
+| `searchString` | Content-anchored placement: `searchText`, `position`, `offset`, `width`, `height` (overrides `pageCoordinates`) |
 
-java -jar eSignASPLibraryCLI.jar gateway --pdf document.pdf
-```
+### `getSignedPdf`
 
----
+Adds: `responseXML` (Base64 of the `eSignResponse` POSTed by the gateway) and `preSignedTempFile` (the temp-file path returned by `getGatewayParam`).
 
-## Examples
+### `getTransactionStatus`
 
-### Example 1: Automated Document Signing Script
+Adds: `transactionID`.
 
-```bash
-#!/bin/bash
-# sign_documents.sh
+### `performBankKYC`
 
-ASPID="YOUR_ASP_ID"
-GATEWAY="https://gateway.example.com"
-RESPONSE="https://yourapp.com/callback"
-
-for pdf in /documents/*.pdf; do
-  echo "Signing: $pdf"
-
-  result=$(java -jar eSignASPLibraryCLI.jar gateway \
-    --aspid "$ASPID" \
-    --gateway-url "$GATEWAY" \
-    --response-url "$RESPONSE" \
-    --pdf "$pdf" \
-    --email "user@example.com" \
-    --auth-mode OTP)
-
-  txnId=$(echo "$result" | jq -r '.transactionId')
-  echo "Transaction ID: $txnId"
-
-  # Wait for signing
-  sleep 30
-
-  # Retrieve signed document
-  java -jar eSignASPLibraryCLI.jar getsigned \
-    --aspid "$ASPID" \
-    --txn-id "$txnId" \
-    --gateway-url "$GATEWAY" \
-    --output "/signed/$(basename $pdf)"
-
-  echo "Signed document saved"
-done
-```
-
-### Example 2: CI/CD Integration
-
-```yaml
-# .github/workflows/sign-release.yml
-name: Sign Release Documents
-
-on:
-  release:
-    types: [published]
-
-jobs:
-  sign:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-
-      - name: Download eSign CLI
-        run: |
-          wget https://github.com/YOUR_USERNAME/Java_eSignLibCLIKit/releases/latest/download/eSignASPLibraryCLI.jar
-
-      - name: Sign release document
-        env:
-          ASPID: ${{ secrets.ESIGN_ASP_ID }}
-          GATEWAY: ${{ secrets.ESIGN_GATEWAY_URL }}
-        run: |
-          java -jar eSignASPLibraryCLI.jar localsign \
-            --pdf release-notes.pdf \
-            --cert ${{ secrets.SIGNING_CERT }} \
-            --password ${{ secrets.CERT_PASSWORD }} \
-            --output signed-release-notes.pdf
-
-      - name: Upload signed document
-        uses: actions/upload-artifact@v3
-        with:
-          name: signed-release-notes
-          path: signed-release-notes.pdf
-```
-
-### Example 3: Docker Integration
-
-```dockerfile
-FROM openjdk:11-jre-slim
-
-# Install eSign CLI
-COPY eSignASPLibraryCLI.jar /app/esign-cli.jar
-
-# Set up entry point
-ENTRYPOINT ["java", "-jar", "/app/esign-cli.jar"]
-
-# Usage:
-# docker run esign-cli gateway --pdf /docs/file.pdf --config /config/esign.json
-```
+Adds: `transactionID`, `IFSCCode`, `bankName`, `accountNumber`, `bankKYCURL`, and a `userInfo` object (`name`, `mobile`, `email`, `address`, `stateProvince`, `country`, `postalCode`, `dateOfBirth`, `gender`, `pan`, `aadhaar`, `photoFormat`, `photoBase64`).
 
 ---
 
-## Command Reference
+## Output JSON
 
-### Global Options
+All methods write a single `CLIOutput` object:
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--help`, `-h` | Show help message | - |
-| `--version`, `-v` | Show version information | - |
-| `--config <file>` | Load configuration from JSON file | - |
-| `--verbose` | Enable verbose output | false |
-| `--json` | Output in JSON format | true |
-
-### Common Options
-
-| Option | Description | Required |
-|--------|-------------|----------|
-| `--aspid <id>` | Application Service Provider ID | Yes* |
-| `--gateway-url <url>` | eSign gateway URL | Yes* |
-| `--response-url <url>` | Callback URL | Yes* |
-| `--pdf <file>` | Path to PDF document | Yes |
-| `--email <email>` | User email address | Yes |
-
-*Can be set via config file or environment variables
-
----
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | General error |
-| 2 | Invalid arguments |
-| 3 | File not found |
-| 4 | Network error |
-| 5 | Signing failed |
-| 6 | Transaction not found |
-
-**Usage in scripts**:
-```bash
-java -jar eSignASPLibraryCLI.jar gateway --pdf document.pdf
-if [ $? -eq 0 ]; then
-  echo "Success!"
-else
-  echo "Failed with exit code $?"
-fi
-```
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: `ClassNotFoundException` when running
-**Solution**: Ensure you're using the complete JAR with dependencies:
-```bash
-java -jar eSignASPLibraryCLI-with-dependencies.jar
-```
-
-**Issue**: Connection timeout
-**Solution**: Increase timeout or check proxy settings:
-```bash
-java -jar eSignASPLibraryCLI.jar gateway --timeout 60000 ...
-```
-
-**Issue**: "Invalid ASPID" error
-**Solution**: Verify ASPID is correctly configured
+| Field | Description |
+|-------|-------------|
+| `transactionID` | Transaction identifier |
+| `gatewayParameter` | (getGatewayParam) value to POST to the gateway |
+| `preSignedTempFile` | (getGatewayParam) temp-file path to pass to `getSignedPdf` |
+| `requestXML`, `responseXML` | Underlying gateway XML |
+| `status` | `1` = success, `0` = failure |
+| `responseCode` | Gateway response code |
+| `errorCode`, `errorMessage` | Error details when `status` is `0` |
+| `returnValues` | Array of signed documents (`signedDocument` base64, `documentHash`, `docInfo`, `docURL`, `docId`, `status`, `errorCode`, `errorMessage`, `isHash`) |
 
 ---
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+GNU Affero General Public License v3.0 (AGPL-3.0). See [LICENSE.txt](LICENSE.txt).
 
-See [LICENSE.txt](LICENSE.txt) for full license text.
-
----
-
-## Dependencies
-
-This CLI tool depends on:
-- [eSign Library (Java)](https://github.com/YOUR_USERNAME/Java_eSignLibKit) - Core signing functionality
-- JSON processing libraries
-- Command-line argument parsing utilities
-
----
-
-## Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
-## Support
-
-For issues or questions:
-- GitHub Issues: Report bugs and feature requests
-- GitHub Discussions: Ask questions
-- Security Issues: Email [security@example.com]
-
----
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for version history.
-
----
-
-**Built with Java | Command-Line Power for Digital Signatures**
+The bundled eSign library is also AGPL-3.0 (driven by its embedded iText); commercial use requires a separate iText commercial license.

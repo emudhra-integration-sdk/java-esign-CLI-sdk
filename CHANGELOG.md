@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- Migrated to the open-source eSign library (`eSignASPLibrary5_5.jar`). **No licence file is required** — the library is now configured with `aspId`, `eSignURL` (V3) and `eSignURLV2` (V2) in the input JSON instead of a `licenceFilePath`.
+- Bundled all compile/runtime dependencies into `lib/` and switched `nbproject/project.properties` to relative classpath entries (removed the original author's hard-coded absolute paths).
+- `performBankKYC` input now requires a `bankKYCURL` field (new library signature).
+- Sample input JSONs in `Resources/inputs/` updated to the licence-free configuration.
+
+---
+
 ## [1.0.0] - 2025-12-24
 
 ### Initial Open Source Release

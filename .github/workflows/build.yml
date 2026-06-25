@@ -1,0 +1,97 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to publish (e.g. v1.0.0). Creates the tag if it does not exist.'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      # Compile via the project's Ant build (honors the relative lib/ classpath
+      # in nbproject/project.properties -> output in build/classes).
+      - name: Compile with Ant
+        run: ant clean compile
+
+      # Assemble a self-contained distribution: the runnable jar plus its
+      # dependencies under dist/lib/. The jar's Class-Path manifest points at
+      # lib/, so the jar + lib/ together run with `java -jar`.
+      - name: Assemble distribution
+        run: |
+          set -euo pipefail
+          mkdir -p dist/lib
+          cp lib/*.jar dist/lib/
+          CLASS_PATH="$(for j in lib/*.jar; do printf 'lib/%s ' "$(basename "$j")"; done)"
+          mkdir -p build
+          {
+            echo "Manifest-Version: 1.0"
+            echo "Main-Class: esignasplibrarycli.ESignASPLibraryCLI"
+            echo "Class-Path: ${CLASS_PATH}"
+          } > build/release-manifest.txt
+          jar cfm dist/eSignASPLibraryCLI.jar build/release-manifest.txt -C build/classes .
+          echo "---- dist ----" && ls -la dist dist/lib
+
+      - name: Smoke test (help output)
+        run: java -jar dist/eSignASPLibraryCLI.jar | tee /dev/stderr | grep -q "eSign ASP library CLI help"
+
+      - name: Upload build as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eSignASPLibraryCLI
+          path: |
+            dist/eSignASPLibraryCLI.jar
+            dist/lib/
+          retention-days: 90
+
+      # ---- Release: only on a version tag push or a manual dispatch ----
+
+      - name: Determine release version
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Package CLI + dependencies bundle
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          (cd dist && zip -r "../eSignASPLibraryCLI-${VERSION}.zip" eSignASPLibraryCLI.jar lib)
+          ls -la "eSignASPLibraryCLI-${VERSION}.zip"
+
+      - name: Publish to GitHub Releases
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.value }}
+          name: eSign CLI Kit ${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/eSignASPLibraryCLI.jar
+            dist/lib/*.jar
+            eSignASPLibraryCLI-${{ steps.version.outputs.value }}.zip

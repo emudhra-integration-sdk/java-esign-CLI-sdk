@@ -80,9 +80,24 @@ public class BankKYCRequest extends BaseInput{
     public void setUserInfo(UserInfo userInfo) {
         this.userInfo = userInfo;
     }
+
+    /**
+     * @return the bankKYCURL
+     */
+    public String getBankKYCURL() {
+        return bankKYCURL;
+    }
+
+    /**
+     * @param bankKYCURL the bankKYCURL to set
+     */
+    public void setBankKYCURL(String bankKYCURL) {
+        this.bankKYCURL = bankKYCURL;
+    }
     private String transactionID;
     private String IFSCCode;
     private String accountNumber;
     private String bankName;
     private UserInfo userInfo;
+    private String bankKYCURL;
 }

@@ -12,17 +12,45 @@ package request;
 public class BaseInput {
 
     /**
-     * @return the licenceFilePath
+     * @return the aspId
      */
-    public String getLicenceFilePath() {
-        return licenceFilePath;
+    public String getAspId() {
+        return aspId;
     }
 
     /**
-     * @param licenceFilePath the licenceFilePath to set
+     * @param aspId the aspId to set
      */
-    public void setLicenceFilePath(String licenceFilePath) {
-        this.licenceFilePath = licenceFilePath;
+    public void setAspId(String aspId) {
+        this.aspId = aspId;
+    }
+
+    /**
+     * @return the V3 (PAN) eSign gateway URL
+     */
+    public String geteSignURL() {
+        return eSignURL;
+    }
+
+    /**
+     * @param eSignURL the V3 (PAN) eSign gateway URL to set
+     */
+    public void seteSignURL(String eSignURL) {
+        this.eSignURL = eSignURL;
+    }
+
+    /**
+     * @return the V2 (Aadhaar) eSign gateway URL
+     */
+    public String geteSignURLV2() {
+        return eSignURLV2;
+    }
+
+    /**
+     * @param eSignURLV2 the V2 (Aadhaar) eSign gateway URL to set
+     */
+    public void seteSignURLV2(String eSignURLV2) {
+        this.eSignURLV2 = eSignURLV2;
     }
 
     /**
@@ -151,7 +179,9 @@ public class BaseInput {
         this.proxyUserPassword = proxyUserPassword;
     }
 
-    private String licenceFilePath;
+    private String aspId;
+    private String eSignURL;
+    private String eSignURLV2;
     private String pfxPath;
     private String pfxPassword;
     private String pfxAlias;
