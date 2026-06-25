@@ -2,6 +2,17 @@
 
 A command-line interface for eMudhra's open-source [eSign Library](https://github.com/emudhra-integration-sdk/java-esign-sdk). It wraps the library's signing API so you can drive PDF eSign workflows from the terminal, scripts, and CI/CD pipelines using simple JSON files for input and output.
 
+## Important Notice
+
+> **This repository is a reference CLI implementation published by eMudhra as open source.**
+>
+> eMudhra publishes this tool to demonstrate how the eSign Library can be driven from the command line. **eMudhra's responsibility is limited to the eSign API and gateway services. eMudhra takes no responsibility for this CLI tool or for any JAR built or published from this repository.** The source, the built JAR, and the bundled third-party dependencies are provided **"AS IS", without warranty of any kind**, express or implied.
+>
+> - This CLI is a thin wrapper around the open-source [eSign Library](https://github.com/emudhra-integration-sdk/java-esign-sdk); all cryptographic and gateway logic resides in that library.
+> - Any modifications, redistribution, or production use of this tool and its JAR are solely at your own discretion and responsibility, subject to the [AGPL-3.0 license](LICENSE.txt).
+> - Bundled third-party libraries remain under their respective licenses — see [NOTICE](NOTICE).
+> - For API access, gateway URLs, ASP ID, and PFX certificates, contact [eMudhra](https://www.emudhra.com).
+
 ## Table of Contents
 - [Overview](#overview)
 - [Requirements](#requirements)

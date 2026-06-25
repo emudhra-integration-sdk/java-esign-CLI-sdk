@@ -68,4 +68,4 @@ If Ant is unavailable, the project compiles directly: `javac -encoding UTF-8 -cp
 - Gson is built with `disableHtmlEscaping()` — preserve this (output contains URLs/XML that must not be HTML-escaped).
 - On success the program prints `Successful`; on `IOException`/`IllegalArgumentException` it prints the stack trace plus `Failure`. The README's documented numeric exit codes are not implemented.
 - Credentials (PFX password, proxy password) arrive in plaintext inside the input JSON files — these files are sensitive.
-- Licensed under AGPL-3.0 (`LICENSE.txt`).
+- Licensed under AGPL-3.0 (`LICENSE.txt`). The CLI and any JAR built/published from it are provided "AS IS" — eMudhra's responsibility is limited to the eSign API/gateway services (see the **Important Notice** in `README.md`). Bundled third-party libraries are attributed in `NOTICE`; keep it current when changing `lib/`.

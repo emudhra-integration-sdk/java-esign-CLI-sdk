@@ -1,0 +1,137 @@
+eSign Library CLI Kit (Java)
+Copyright (c) 2025 eMudhra Limited
+
+This tool is a command-line wrapper around the open-source eSign Library and
+is provided "AS IS", without warranty of any kind. eMudhra's responsibility is
+limited to the eSign API and gateway services; eMudhra takes no responsibility
+for this CLI tool or for any JAR built or published from this repository.
+
+This product bundles and redistributes the eSign Library together with the
+following third-party libraries (under lib/ and in published release archives).
+Each remains licensed under its own terms.
+
+=======================================================================
+eMudhra eSign Library (eSignASPLibrary5_5.jar)
+=======================================================================
+License: GNU Affero General Public License v3.0 (AGPL-3.0)
+Source:  https://github.com/emudhra-integration-sdk/java-esign-sdk
+Copyright (c) 2025 eMudhra Limited
+
+This library embeds, in repackaged form, the iText PDF library
+(esign.text.*, AGPL-3.0) and the Bouncy Castle cryptography library
+(org.emcastle.*, MIT). Use of the iText portions requires compliance with
+the AGPL-3.0 license terms; for commercial/proprietary licensing of iText,
+contact https://itextpdf.com/pricing.
+
+=======================================================================
+Google Gson
+=======================================================================
+Version: 2.10.1
+License: Apache License, Version 2.0
+Website: https://github.com/google/gson
+Copyright (c) 2008 Google Inc.
+
+=======================================================================
+Apache Batik - SVG Toolkit
+=======================================================================
+Version: 1.13
+License: Apache License, Version 2.0
+Website: https://xmlgraphics.apache.org/batik/
+Copyright (c) 1999-2020 The Apache Software Foundation
+
+=======================================================================
+Apache Commons IO
+=======================================================================
+Version: 2.4
+License: Apache License, Version 2.0
+Website: https://commons.apache.org/proper/commons-io/
+Copyright (c) 2002-2012 The Apache Software Foundation
+
+=======================================================================
+Apache XML Security for Java (xmlsec)
+=======================================================================
+Version: 2.3.0
+License: Apache License, Version 2.0
+Website: https://santuario.apache.org/
+Copyright (c) 1999-2021 The Apache Software Foundation
+
+=======================================================================
+Apache XMLGraphics Commons
+=======================================================================
+Version: 2.4
+License: Apache License, Version 2.0
+Website: https://xmlgraphics.apache.org/commons/
+Copyright (c) 2006-2019 The Apache Software Foundation
+
+=======================================================================
+Woodstox XML Processor
+=======================================================================
+Version: 5.2.1
+License: Apache License, Version 2.0
+Website: https://github.com/FasterXML/woodstox
+Copyright (c) FasterXML, LLC
+
+=======================================================================
+Stax2 API
+=======================================================================
+Version: 4.2
+License: BSD 2-Clause License
+Website: https://github.com/FasterXML/stax2-api
+Copyright (c) FasterXML, LLC
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+=======================================================================
+SLF4J - Simple Logging Facade for Java
+=======================================================================
+Version: 1.7.32 (slf4j-api and slf4j-simple)
+License: MIT License
+Website: https://www.slf4j.org/
+Copyright (c) 2004-2021 QOS.ch
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+=======================================================================
+W3C SVG DOM API
+=======================================================================
+Version: 1.1.0
+License: W3C Software and Document License
+Website: https://www.w3.org/Graphics/SVG/
+Copyright (c) World Wide Web Consortium
+
+=======================================================================
+Apache License, Version 2.0
+=======================================================================
+The following components are licensed under the Apache License 2.0:
+- Google Gson
+- Apache Batik
+- Apache Commons IO
+- Apache XML Security for Java
+- Apache XMLGraphics Commons
+- Woodstox XML Processor
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use these files except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
